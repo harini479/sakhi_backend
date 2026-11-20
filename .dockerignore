@@ -1,0 +1,33 @@
+# Version control & IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+
+# Python caches & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Local secrets, credentials & logs (NEVER bake into container image)
+.env
+.env.*
+!.env.example
+*.json
+!data/*.json
+*.pem
+*.key
+*.p12
+*.log
+
+# Dev-only files & tests
+tests/
+dev_server.py
+render.yaml
+README.md
