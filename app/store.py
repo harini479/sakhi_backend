@@ -64,6 +64,7 @@ def _firestore_write(collection: str, doc_id: str, payload: Dict[str, Any], merg
 
 
 def _firestore_read_user(user_id: str) -> Optional[Dict[str, Any]]:
+    return None  # In-memory only for demo mode, skip all network Firestore calls
     db = get_firestore_client()
     if db is None:
         return None

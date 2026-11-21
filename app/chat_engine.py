@@ -113,6 +113,108 @@ STOP_WORDS = {
 # ---------------------------------------------------------------------------
 # Clean, Rephrased Clinical Escalation & Emergency Messages
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Verified Telugu Knowledge & Clinical Triage Mappings
+# ---------------------------------------------------------------------------
+TELUGU_KNOWLEDGE_MAP: Dict[str, str] = {
+    "mk-ivf-overview": (
+        "**ఐవీఎఫ్ (IVF - In Vitro Fertilization) అంటే ఏమిటి?**\n\n"
+        "ఐవీఎఫ్ అనేది ఒక ఆధునిక సంతానోత్పత్తి చికిత్స. ఇందులో మహిళ అండాలను మరియు పురుషుడి శుక్రకణాలను ప్రత్యేకమైన ల్యాబ్‌లో ఫలదీకరణం (fertilize) చేసి, ఏర్పడిన ఆరోగ్యకరమైన పిండాన్ని (embryo) తిరిగి గర్భాశయంలోకి ప్రవేశపెడతారు.\n\n"
+        "**ఐవీఎఫ్ యొక్క ముఖ్యమైన 5 దశలు:**\n"
+        "1. **అండాశయ ప్రేరణ (Ovarian Stimulation - 8 నుండి 12 రోజులు):** హార్మోన్ ఇంజెక్షన్ల ద్వారా ఎక్కువ అండాలు పరిపక్వం చెందేలా చేస్తారు.\n"
+        "2. **ట్రిగ్గర్ షాట్ & అండాల సేకరణ (Egg Retrieval):** అండాలు పరిపక్వమయ్యాక, చిన్న ప్రక్రియ ద్వారా వాటిని సేకరిస్తారు.\n"
+        "3. **ఫలదీకరణం & పిండం అభివృద్ధి:** ల్యాబ్‌లో అండాలు, శుక్రకణాలతో ఫలదీకరణం చెంది 3-5 రోజులు పెరుగుతాయి.\n"
+        "4. **పిండ మార్పిడి (Embryo Transfer):** ఆరోగ్యకరమైన పిండాన్ని సున్నితంగా గర్భాశయంలో ఉంచుతారు. ఇది నొప్పిలేని ప్రక్రియ.\n"
+        "5. **రెండు వారాల నిరీక్షణ & ప్రెగ్నెన్సీ టెస్ట్:** 12-14 రోజుల తర్వాత రక్త పరీక్ష (Beta-hCG) ద్వారా గర్భధారణను నిర్ధారిస్తారు.\n\n"
+        "_వ్యక్తిగత వైద్య సలహాల కోసం దయచేసి మీ సంతానోత్పత్తి వైద్యుడిని సంప్రదించండి._"
+    ),
+    "mk-iui-overview": (
+        "**ఐయూఐ (IUI - Intrauterine Insemination) అంటే ఏమిటి?**\n\n"
+        "ఐయూఐ అనేది సులభమైన మరియు సున్నితమైన సంతానోత్పత్తి చికిత్స. ఇందులో శుద్ధి చేసి, కేంద్రీకరించిన చురుకైన శుక్రకణాలను మహిళ అండోత్సర్గము (ovulation) సమయంలో నేరుగా గర్భాశయం లోపల ప్రవేశపెడతారు.\n\n"
+        "ఇది శుక్రకణాలు అండం వరకు ప్రయాణించే దూరాన్ని తగ్గిస్తుంది, దీనివల్ల గర్భం దాల్చే అవకాశాలు పెరుగుతాయి. ఇది సాధారణంగా 5-10 నిమిషాల్లో పూర్తయ్యే నొప్పిలేని ప్రక్రియ.\n\n"
+        "_వ్యక్తిగత వైద్య సలహాల కోసం దయచేసి మీ వైద్యుడిని సంప్రదించండి._"
+    ),
+    "mk-age-fertility": (
+        "**వయస్సు సంతానోత్పత్తి అవకాశాలను ఎలా ప్రభావితం చేస్తుంది?**\n\n"
+        "మహిళలు పరిమిత సంఖ్యలో అండాలతో జన్మిస్తారు. వయస్సు పెరిగే కొద్దీ అండాల సంఖ్య మరియు నాణ్యత సహజంగా తగ్గుతాయి — ముఖ్యంగా 32 ఏళ్ల తర్వాత క్రమంగా, 35–37 ఏళ్ల తర్వాత వేగంగా తగ్గుతాయి.\n\n"
+        "అయితే, వయస్సు అనేది ఒక భాగం మాత్రమే. 30లలో మరియు 40ల ప్రారంభంలో కూడా సరైన మార్గదర్శకత్వం, పోషకాహారం లేదా ఐవీఎఫ్ వంటి చికిత్సల ద్వారా చాలామంది విజయవంతంగా గర్భం దాలుస్తున్నారు. AMH రక్త పరీక్ష మరియు స్కాన్ ద్వారా మీ అండాల నిల్వను స్పష్టంగా తెలుసుకోవచ్చు.\n\n"
+        "_మరింత సమాచారం కోసం మీ వైద్యుడిని సంప్రదించండి._"
+    ),
+    "mk-preg-routines": (
+        "**గర్భధారణ సమయంలో ఆరోగ్యకరమైన రోజువారీ జాగ్రత్తలు:**\n\n"
+        "• **సమతుల్య భారతీయ ఆహారం:** పప్పులు, పన్నీర్, గుడ్లు, పెరుగు, మొలకలు, ఆకుకూరలు మరియు తాజా పండ్లను తగినంత ప్రోటీన్ కోసం తీసుకోండి.\n"
+        "• **విటమిన్లు:** డాక్టర్ సూచించిన ఫోలిక్ యాసిడ్, ఐరన్, కాల్షియం మరియు విటమిన్ డి తప్పకుండా వాడండి.\n"
+        "• **నీరు & విశ్రాంతి:** రోజుకు 8-10 గ్లాసుల నీరు త్రాగండి మరియు 7-9 గంటల ప్రశాంతమైన నిద్ర అవసరం (ఎడమ వైపు తిరిగి పడుకోవడం మంచిది).\n"
+        "• **తేలికపాటి నడక:** రోజుకు 20-30 నిమిషాలు నడవడం రక్త ప్రసరణకు మరియు ఒత్తిడి తగ్గడానికి సహాయపడుతుంది.\n"
+        "• **రెగ్యులర్ చెకప్‌లు:** సూచించిన స్కాన్‌లు మరియు రక్త పరీక్షలను సమయానికి చేయించుకోండి."
+    ),
+    "mk-egg-quality": (
+        "**అండాల నాణ్యత మెరుగుపడటానికి ఆహారపు అలవాట్లు:**\n\n"
+        "అండాలు విడుదల కావడానికి దాదాపు 90 రోజుల సమయం పడుతుంది, కాబట్టి మంచి ఆహారపు అలవాట్లు ఎంతో ప్రభావం చూపుతాయి:\n"
+        "• **యాంటీఆక్సిడెంట్ ఆహారాలు:** ఉసిరి (Amla), దానిమ్మ, పాలకూర, బ్రకోలి మరియు తాజా రంగురంగుల కూరగాయలు.\n"
+        "• **ఆరోగ్యకరమైన కొవ్వులు:** అక్రూట్లు (Walnuts), బాదం, అవిసె గింజలు (Flaxseeds), చియా గింజలు.\n"
+        "• **మంచి ప్రోటీన్లు:** పప్పులు (Dal), శనగలు, పన్నీర్, పెరుగు, గుడ్లు.\n"
+        "• **జీవనశైలి:** 7-8 గంటల నిద్ర, ప్రాసెస్ చేసిన చక్కెరలు తగ్గించడం, కెఫీన్ పరిమితం చేయడం మరియు ఒత్తిడి తగ్గించుకోవడం."
+    ),
+    "mk-tww-anxiety": (
+        "**రెండు వారాల నిరీక్షణ (Two-Week Wait) & మానసిక ప్రశాంతత:**\n\n"
+        "ఫలితాల కోసం ఎదురుచూసే సమయంలో ఆందోళన కలగడం చాలా సహజం. మిమ్మల్ని మీరు ప్రశాంతంగా ఉంచుకోవడానికి సూచనలు:\n"
+        "• ప్రతి చిన్న లక్షణాన్ని గమనిస్తూ ఆందోళన చెందవద్దు (ప్రొజెస్టెరాన్ మందుల వల్ల కొన్ని లక్షణాలు సహజంగా కనిపిస్తాయి).\n"
+        "• లోతైన శ్వాస వ్యాయామాలు (4-4-6 Breathing) చేయండి.\n"
+        "• మానసిక ప్రశాంతత కోసం ఒత్తిడి కలిగించే ఇంటర్నెట్ ఫోరమ్‌లకు దూరంగా ఉండండి.\n"
+        "• సంగీతం వినడం, తేలికపాటి నడక వంటి మీకు నచ్చిన పనుల్లో నిమగ్నమవ్వండి."
+    ),
+    "mk-iui-1": (
+        "**ఐయూఐ సక్సెస్ రేట్ మరియు అంచనాలు:**\n\n"
+        "ఐయూఐ విజయావకాశాలు వయస్సు మరియు సంతానోత్పత్తి సమస్యలపై ఆధారపడి ఉంటాయి. 35 ఏళ్లలోపు మహిళల్లో సైకిల్‌కు సగటున 10-20% విజయవంతమయ్యే అవకాశం ఉంటుంది. గర్భధారణ సాధించడానికి సాధారణంగా 3-4 సైకిల్స్ అవసరం కావచ్చు."
+    ),
+    "mk-ivf-1": (
+        "**ఐవీఎఫ్ ట్రిగ్గర్ షాట్ (Trigger Shot) గురించిన వివరాలు:**\n\n"
+        "ట్రిగ్గర్ షాట్ అనేది అండాల సేకరణకు సరిగ్గా 36 గంటల ముందు ఇచ్చే అత్యంత కీలకమైన ఇంజెక్షన్. ఇది అండాలను సరిగ్గా పరిపక్వం చేస్తుంది. ఈ ఇంజెక్షన్ సమయం చాలా ముఖ్యం — డాక్టర్ సూచించిన సమయానికి ఖచ్చితంగా తీసుకోవాలి."
+    ),
+    "mk-ivf-2": (
+        "**ఎంబ్రియో ట్రాన్స్‌ఫర్ తర్వాత స్వల్ప రక్తస్రావం (Spotting):**\n\n"
+        "ఎంబ్రియో ట్రాన్స్‌ఫర్ తర్వాత కొద్దిగా గులాబీ లేదా గోధుమ రంగు స్పాటింగ్ రావడం సాధారణమే కావచ్చు. సూచించిన మందులను కొనసాగించండి మరియు విశ్రాంతి తీసుకోండి. అధిక రక్తస్రావం లేదా తీవ్రమైన నొప్పి ఉంటే వెంటనే మీ క్లినిక్‌ను సంప్రదించండి."
+    ),
+    "mk-preg-1": (
+        "**మొదటి త్రైమాసికంలో ఆహార నియమాలు:**\n\n"
+        "మొదటి త్రైమాసికంలో ఫోలిక్ యాసిడ్ తప్పనిసరిగా వాడండి. పచ్చి మాంసం, పాశ్చరైజ్ చేయని పాలు, అధిక మెర్క్యురీ ఉన్న చేపలను నివారించండి. కెఫీన్ రోజుకు 200mg కంటే తక్కువగా ఉండేలా చూసుకోండి."
+    ),
+    "mk-preg-2": (
+        "**గర్భధారణ ప్రారంభంలో వికారం మరియు వాంతులు (Morning Sickness):**\n\n"
+        "మొదటి త్రైమాసికంలో వికారం మరియు వాంతులు సాధారణం. చిన్న చిన్న మోతాదుల్లో ఆహారం తీసుకోవడం, ద్రవపదార్థాలు తాగడం సహాయపడతాయి. 24 గంటలకు పైగా నీరు కూడా తీసుకోలేకపోతే వెంటనే వైద్యుడిని సంప్రదించండి."
+    ),
+    "mk-pcos-1": (
+        "**PCOS & క్రమరహిత ఋతుక్రమం నిర్వహణ:**\n\n"
+        "PCOS ఉన్నవారిలో అండోత్సర్గము సక్రమంగా జరగకపోవడం వల్ల పీరియడ్స్ ఆలస్యం కావచ్చు. సమతుల్య ఆహారం, బరువు నియంత్రణ మరియు క్రమం తప్పని వ్యాయామం ద్వారా దీనిని నియంత్రించవచ్చు."
+    ),
+    "mk-gen-1": (
+        "**వైరల్ జ్వరం జాగ్రత్తలు:**\n\n"
+        "జ్వరం వచ్చినప్పుడు తగినంత విశ్రాంతి తీసుకోవడం మరియు ఎక్కువ నీరు లేదా ఓఆర్ఎస్ తాగడం ముఖ్యం. జ్వరం 72 గంటలకు మించి తగ్గకపోతే లేదా తీవ్రమైన తలనొప్పి, శ్వాస తీసుకోవడంలో ఇబ్బంది ఉంటే వెంటనే వైద్యుడిని సంప్రదించండి."
+    ),
+    "mk-fin-1": (
+        "**ఐవీఎఫ్ ఖర్చులు & ఆర్థిక ప్రణాళిక:**\n\n"
+        "భారతదేశంలో సంతానోత్పత్తి చికిత్స ఖర్చులు మందులు, ఇంజెక్షన్లు, ల్యాబ్ పరీక్షలు మరియు పిండం గడ్డకట్టడం (freezing) వంటి అంశాలపై ఆధారపడి ఉంటాయి. వివరణాత్మక ప్యాకేజీ వివరాల కోసం మీ క్లినిక్‌ను సంప్రదించండి."
+    ),
+    "mk-fin-2": (
+        "**ఇన్సూరెన్స్ మరియు ఈఎంఐ (EMI) ఎంపికలు:**\n\n"
+        "చాలా క్లినిక్‌లు కుటుంబాలపై ఆర్థిక భారం తగ్గించడానికి జీరో-కాస్ట్ EMI సౌకర్యాలను అందిస్తున్నాయి. పూర్తి వివరాల కోసం మీ క్లినిక్ కౌన్సెలర్‌ను సంప్రదించండి."
+    ),
+}
+
+TELUGU_CLINICAL_QUESTIONS: Dict[str, str] = {
+    "Mild cramping after IUI procedure": "IUI ప్రక్రియ తర్వాత 1-2 రోజులు తేలికపాటి తిమ్మిర్లు సాధారణమే. మీకు తీవ్రమైన నొప్పి, అధిక రక్తస్రావం లేదా 100.4°F కంటే ఎక్కువ జ్వరం ఉందా?",
+    "Light spotting after IUI": "IUI తర్వాత కొద్దిగా గులాబీ లేదా గోధుమ రంగు స్పాటింగ్ రావడం సాధారణమే. రక్తస్రావం ఎక్కువగా ఉందా (గంటకు ఒక ప్యాడ్ తడిసేలా) లేదా తీవ్రమైన కడుపు నొప్పి ఉందా?",
+    "Bloating and discomfort during stimulation injections": "ఇంజెక్షన్ల సమయంలో అండాశయాలు పెద్దవి కావడం వల్ల కొద్దిగా కడుపు ఉబ్బరం సాధారణమే. మీకు శ్వాస తీసుకోవడంలో ఇబ్బంది, తీవ్రమైన కడుపు నొప్పి లేదా వేగంగా బరువు పెరగడం వంటి లక్షణాలు ఉన్నాయా?",
+    "Morning sickness, nausea, and vomiting": "మొదటి త్రైమాసికంలో వికారం సాధారణం. మీరు 12 గంటలకు పైగా ఏ ద్రవపదార్థాలు కూడా తీసుకోలేకపోతున్నారా లేదా తీవ్రమైన మైకం ఉందా?",
+    "Lower abdominal cramping (mild)": "గర్భాశయం విస్తరించడం వల్ల తేలికపాటి తిమ్మిర్లు రావచ్చు. నొప్పి తీవ్రంగా ఉందా, ఒకవైపు మాత్రమే వస్తోందా లేదా రక్తస్రావంతో పాటు ఉందా?",
+    "Fever": "చాలా జ్వరాలు ఇన్ఫెక్షన్ల వల్ల వస్తాయి. మీ శరీర ఉష్ణోగ్రత ఎంత నమోదైంది మరియు జ్వరం వచ్చి ఎన్ని రోజులు అయ్యింది?",
+    "Headache": "తలనొప్పి అకస్మాత్తుగా తీవ్రంగా వచ్చిందా లేదా క్రమంగా వచ్చిందా? కంటి చూపు మసకబారడం వంటి లక్షణాలు ఉన్నాయా?",
+    "Abdominal Pain": "కడుపు నొప్పి ఎక్కడ వస్తోంది మరియు ఎంత తీవ్రంగా ఉంది?",
+    "Dizziness": "మీకు స్పృహ తప్పడం లేదా ఒకవైపు బలహీనత వంటి లక్షణాలు అనిపించాయా?",
+}
+
 def build_doctor_escalation_message(target_lang: str) -> str:
     if target_lang == "Telugu":
         return (
@@ -565,6 +667,8 @@ async def process_sakhi_chat(
     phone_number: Optional[str] = None,
     message: str = "",
     language: str = "en",
+    session_id: Optional[str] = None,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     phone = store.normalize_phone(phone_number)
     user = store.get_user_by_id(user_id) if user_id else store.get_user_by_phone(phone)
@@ -755,11 +859,24 @@ async def process_sakhi_chat(
         first_name = str(user.get("name") or patient.get("name") or "").split()[0]
 
         if is_smalltalk(msg):
-            greeting = (
-                f"Hi {first_name}! How are you feeling today with your *{active_treatment}*?"
-                if has_active_treatment
-                else f"Hello {first_name}! I am Sakhi, your clinic companion. How can I help you with your care today?"
-            )
+            if target_lang == "Telugu":
+                greeting = (
+                    f"నమస్కారం {first_name}! మీ *{active_treatment}* చికిత్సతో ఈరోజు మీ ఆరోగ్యం ఎలా ఉంది?"
+                    if has_active_treatment
+                    else f"నమస్కారం {first_name}! నేను సఖి, మీ క్లినిక్ సహాయకురాలిని. ఈరోజు మీ చికిత్సలో నేను మీకు ఎలా సహాయపడగలను?"
+                )
+            elif target_lang == "Hindi":
+                greeting = (
+                    f"नमस्ते {first_name}! आपके *{active_treatment}* उपचार के साथ आज आप कैसा महसूस कर रहे हैं?"
+                    if has_active_treatment
+                    else f"नमस्ते {first_name}! मैं సఖి हूँ, आपकी क्लिनिक साथी। आज मैं आपकी देखभाल में कैसे मदद कर सकती हूँ?"
+                )
+            else:
+                greeting = (
+                    f"Hi {first_name}! How are you feeling today with your *{active_treatment}*?"
+                    if has_active_treatment
+                    else f"Hello {first_name}! I am Sakhi, your clinic companion. How can I help you today?"
+                )
             store.save_message(uid, "assistant", greeting, target_lang)
             return {
                 "reply": greeting,
@@ -825,7 +942,11 @@ async def process_sakhi_chat(
                     "triage_retry_count": 0,
                 },
             )
-            triage_question = rule.get("clarifying_question") or rule.get("final_answer")
+            triage_question = (
+                TELUGU_CLINICAL_QUESTIONS.get(rule.get("scenario", ""))
+                if target_lang == "Telugu" and rule.get("scenario") in TELUGU_CLINICAL_QUESTIONS
+                else (rule.get("clarifying_question") or rule.get("final_answer"))
+            )
             store.save_message(uid, "assistant", triage_question, target_lang)
             return {
                 "reply": triage_question,
@@ -855,11 +976,24 @@ async def process_sakhi_chat(
             matches = search_medical_knowledge(msg, active_treatment)
             if matches and matches[0][1] >= 0.28:
                 top_doc = matches[0][0]
-                answer = top_doc["content"]
+                doc_id = top_doc.get("id", "")
+                if target_lang == "Telugu" and doc_id in TELUGU_KNOWLEDGE_MAP:
+                    answer = TELUGU_KNOWLEDGE_MAP[doc_id]
+                else:
+                    answer = top_doc["content"]
+                lang_directive = (
+                    "CRITICAL LANGUAGE DIRECTIVE: The user has selected Telugu. You MUST compose your ENTIRE response in Telugu script (తెలుగులో మాత్రమే సమాధానం రాయండి). Even though the reference snippets are in English, translate and explain everything in clear, empathetic Telugu. Do NOT write in English."
+                    if target_lang == "Telugu"
+                    else (
+                        "CRITICAL LANGUAGE DIRECTIVE: The user has selected Hindi. You MUST compose your ENTIRE response in Hindi script (हिन्दी में ही उत्तर दें). Do NOT write in English."
+                        if target_lang == "Hindi"
+                        else f"Respond in {target_lang} clearly and warmly."
+                    )
+                )
                 llm_res = await generate_sakhi_reply(
                     system_instruction=(
                         f"You are Sakhi, an empathetic Post-Care Educational Assistant for a patient currently in {active_treatment}. "
-                        f"Respond in {target_lang} clearly and warmly. Ground your response ONLY in this verified clinical context:\n"
+                        f"{lang_directive} Ground your response ONLY in this verified clinical context:\n"
                         f"{top_doc['content']}\n"
                         "Do not add unverified medical claims outside this context. Write clear, friendly prose with short bullet points if helpful."
                     ),
@@ -951,9 +1085,19 @@ async def process_sakhi_chat(
         + "\n\n".join(context_sections[:4])
     )
 
+    lang_directive = (
+        "CRITICAL LANGUAGE DIRECTIVE: The user has selected Telugu. You MUST compose your ENTIRE response in fluent Telugu script (తెలుగులో మాత్రమే సమాధానం రాయండి). Even though the reference snippets and query are in English, translate and explain everything in clear, empathetic Telugu. Do NOT respond in English."
+        if target_lang == "Telugu"
+        else (
+            "CRITICAL LANGUAGE DIRECTIVE: The user has selected Hindi. You MUST compose your ENTIRE response in Hindi script (हिन्दी में ही उत्तर दें). Do NOT respond in English."
+            if target_lang == "Hindi"
+            else f"Respond in {target_lang}."
+        )
+    )
+
     system_prompt = (
         "You are Sakhi, a warm, compassionate, culturally-aware Indian fertility, pregnancy, and women's health companion built by JanmaSethu. "
-        f"Respond in {target_lang}. Address {user.get('name') or 'the user'} gently when natural. "
+        f"{lang_directive} Address {user.get('name') or 'the user'} gently when natural. "
         "Directly and clearly answer the user's question using the verified knowledge snippets below, structured cleanly for easy reading (short paragraphs or bullet points, 120-220 words unless more detail is asked). "
         "Do not diagnose or prescribe specific medication dosages; gently remind the user to consult their fertility specialist or doctor for personalized clinical decisions."
         f"{context_block}"
@@ -976,7 +1120,11 @@ async def process_sakhi_chat(
         route_used = "supabase_direct"
     else:
         best_doc = local_matches[0][0]
-        final_reply = f"{best_doc['title']}\n\n{best_doc['content']}\n\nFor personalized medical advice or dosage decisions, please consult your treating specialist."
+        doc_id = best_doc.get("id", "")
+        if target_lang == "Telugu" and doc_id in TELUGU_KNOWLEDGE_MAP:
+            final_reply = TELUGU_KNOWLEDGE_MAP[doc_id]
+        else:
+            final_reply = f"{best_doc['title']}\n\n{best_doc['content']}\n\nFor personalized medical advice or dosage decisions, please consult your treating specialist."
         route_used = "local_kb"
 
     store.add_rewards(uid, 5)
