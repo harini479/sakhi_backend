@@ -2,7 +2,15 @@
 
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List
+
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).resolve().parent.parent / ".env"
+    load_dotenv(_env_path, override=True)
+except ImportError:
+    pass
 
 
 DEMO_FRONTEND_ORIGIN = "https://frontend-service-727289315493.asia-south1.run.app"

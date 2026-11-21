@@ -16,6 +16,9 @@ env/
 # Firebase / GCP service-account keys & certificates (use Cloud Run ADC in production)
 *firebase-adminsdk*.json
 *serviceAccount*.json
+*service-account*.json
+sakhi-service-account.json
+*.json.key
 *credentials*.json
 *.pem
 *.key

@@ -49,8 +49,11 @@ async def lifespan(_app: FastAPI):
     current = get_settings()
     configure_logging(current.log_level)
     init_firebase()
+    # Load pre-care FAQ from Firestore AFTER Firebase is initialized
+    faq_count = store.load_faq_from_firestore()
     logger.info(
-        "Sakhi FastAPI backend started.",
+        "Sakhi FastAPI backend started. FAQ entries loaded: %d",
+        faq_count,
         extra={"event": "app_startup"},
     )
     yield

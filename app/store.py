@@ -49,7 +49,6 @@ def _utc_now_iso() -> str:
 
 
 def _firestore_write(collection: str, doc_id: str, payload: Dict[str, Any], merge: bool = True) -> None:
-    return  # In-memory only for demo mode, skip all network Firestore calls
     """Persist critical records to Cloud Firestore when initialized on Cloud Run."""
     db = get_firestore_client()
     if db is None:
@@ -64,7 +63,6 @@ def _firestore_write(collection: str, doc_id: str, payload: Dict[str, Any], merg
 
 
 def _firestore_read_user(user_id: str) -> Optional[Dict[str, Any]]:
-    return None  # In-memory only for demo mode, skip all network Firestore calls
     db = get_firestore_client()
     if db is None:
         return None
@@ -242,7 +240,7 @@ clinical_rules: List[Dict[str, Any]] = [
         "department": "General Medicine",
         "treatment_stage": "Initial Assessment",
         "scenario": "Headache",
-        "keywords": ["headache", "migraine", "head pain"],
+        "keywords": ["headache", "head ache", "migraine", "head pain"],
         "emergency_flag": False,
         "clarifying_question": "Did the headache start suddenly or gradually, and is it severe?",
         "escalation_trigger": "Sudden worst headache, neurological symptoms, confusion, vision loss",
@@ -292,7 +290,7 @@ clinical_rules: List[Dict[str, Any]] = [
         "department": "General Medicine",
         "treatment_stage": "Initial Assessment",
         "scenario": "Abdominal Pain",
-        "keywords": ["abdominal pain", "stomach pain", "stomach ache", "belly pain"],
+        "keywords": ["abdominal pain", "stomach pain", "stomach ache", "stomach", "stomachache", "belly pain", "tummy ache", "abdomen"],
         "emergency_flag": False,
         "clarifying_question": "Where exactly is the pain located and how severe is it?",
         "escalation_trigger": "Severe localized pain, rigid abdomen",
@@ -639,8 +637,144 @@ def _load_knowledge_from_json() -> None:
         logger.warning("Could not parse emo_hospital_info.json.", extra={"event": "kb_parse_error"})
 
 
+# ---------------------------------------------------------------------------
+# Dedicated FAQ knowledge store — ONLY Firestore opdesk_sakhi_faq entries.
+# medical_knowledge (post-care) is kept completely separate.
+# ---------------------------------------------------------------------------
+faq_knowledge: List[Dict[str, Any]] = []
+
+
+def load_faq_from_firestore() -> int:
+    """
+    Pull every document from the 'opdesk_sakhi_faq' Firestore collection
+    into faq_knowledge (pre-care only).
+
+    Firestore columns: answer, authorized_yes_no, category, id,
+                       infographic_url, question, speaker, topic, youtube_link
+
+    Post-care data (clinic_patients, users_by_id, medical_knowledge) is NOT touched.
+    Returns count of docs loaded (0 if Firestore unavailable).
+    """
+    global faq_knowledge
+    db = get_firestore_client()
+    if db is None:
+        logger.info(
+            "Firestore not available; skipping opdesk_sakhi_faq load.",
+            extra={"event": "faq_firestore_skip"},
+        )
+        return 0
+    try:
+        docs = db.collection("opdesk_sakhi_faq").stream()
+        loaded: List[Dict[str, Any]] = []
+        for doc in docs:
+            data = doc.to_dict() or {}
+
+            # Only surface entries marked as authorized
+            raw_auth = data.get("authorized_yes_no")
+            authorized = str(raw_auth if raw_auth is not None else "yes").strip().lower()
+            if authorized not in {"yes", "true", "1", "y"}:
+                continue
+
+            question = str(data.get("question") or "").strip()
+            answer   = str(data.get("answer") or "").strip()
+            if not question or not answer:
+                continue
+
+            topic_val = str(data.get("topic") or data.get("category") or "General").strip()
+            cat_val   = str(data.get("category") or "Pre-Care FAQ").strip()
+
+            loaded.append({
+                "id":              f"faq-{doc.id}",
+                "category":        cat_val,
+                "lens":            "medical",
+                "sub_category":    topic_val,
+                "title":           question,
+                "content":         answer,
+                "language":        "en",
+                "youtube_link":    str(data.get("youtube_link") or "").strip(),
+                "infographic_url": str(data.get("infographic_url") or "").strip(),
+                "speaker":         str(data.get("speaker") or "").strip(),
+            })
+
+        faq_knowledge = loaded
+        logger.info(
+            "Loaded %d FAQ docs from Firestore 'opdesk_sakhi_faq' into faq_knowledge.",
+            len(loaded),
+            extra={"event": "faq_firestore_loaded"},
+        )
+        return len(loaded)
+    except Exception as exc:
+        logger.warning(
+            "Could not load FAQ from Firestore: %s", exc,
+            extra={"event": "faq_firestore_error"},
+        )
+        return 0
+
+
+def search_faq_knowledge(
+    query: str,
+    top_k: int = 3,
+) -> List[Dict[str, Any]]:
+    """
+    Search ONLY the opdesk_sakhi_faq Firestore entries.
+    Returns up to top_k FAQ dicts whose question/answer match the query,
+    or an empty list if nothing matches — the caller must escalate on empty.
+    """
+    import re as _re
+
+    global faq_knowledge
+    if not faq_knowledge:
+        load_faq_from_firestore()
+
+    if not query or not faq_knowledge:
+        return []
+
+    q_lower = query.lower().strip()
+    stop = {
+        "the", "and", "for", "with", "that", "this", "from", "have",
+        "are", "you", "your", "can", "will", "what", "how", "about",
+        "does", "really", "explain", "tell", "please", "want", "know",
+        "need", "help", "should", "could", "would", "is", "a", "an",
+        "me", "my", "i", "its", "it",
+    }
+    tokens = [t for t in _re.sub(r"[^a-z0-9\s]", " ", q_lower).split() if t not in stop and len(t) > 1]
+    if not tokens:
+        tokens = [t for t in _re.sub(r"[^a-z0-9\s]", " ", q_lower).split() if len(t) > 1]
+    if not tokens:
+        return []
+
+    scored: List[tuple] = []
+    for doc in faq_knowledge:
+        title_lower   = doc.get("title", "").lower()
+        content_lower = doc.get("content", "").lower()
+        topic_lower   = doc.get("sub_category", "").lower()
+        cat_lower     = doc.get("category", "").lower()
+
+        title_hits   = sum(1 for t in tokens if t in title_lower or t in topic_lower or t in cat_lower)
+        content_hits = sum(1 for t in tokens if t in content_lower)
+
+        if title_hits == 0 and content_hits == 0:
+            continue
+
+        score = (title_hits / len(tokens)) * 0.70 + (content_hits / len(tokens)) * 0.30
+        # Exact phrase bonus in title or topic
+        if q_lower in title_lower or q_lower in topic_lower:
+            score += 0.5
+        elif any(t in title_lower or t in topic_lower for t in tokens):
+            score += 0.2
+
+        if score >= 0.20:
+            scored.append((doc, score))
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return [doc for doc, _ in scored[:top_k]]
+
+
 _seed_initial_data()
 _load_knowledge_from_json()
+# NOTE: load_faq_from_firestore() is NOT called here at import time.
+# Firebase is not yet initialized when store.py is imported.
+# It is called explicitly from main.py / dev_server.py AFTER init_firebase().
 
 
 def get_predefined_care_preview() -> Dict[str, Any]:
@@ -677,7 +811,7 @@ def get_or_create_guest_session(session_id: str, default_name: Optional[str] = N
             "session_id": session_id,
             "user_id": session_id,
             "id": session_id,
-            "name": default_name,
+            "name": default_name or "Guest",
             "phone_number": session_id,
             "email": None,
             "role": "guest",
@@ -689,7 +823,7 @@ def get_or_create_guest_session(session_id: str, default_name: Optional[str] = N
         _guest_sessions[session_id] = session
     else:
         session["last_active"] = _utc_now_iso()
-        if default_name and not session.get("name"):
+        if default_name and (not session.get("name") or session.get("name") == "Guest"):
             session["name"] = default_name
     return session
 

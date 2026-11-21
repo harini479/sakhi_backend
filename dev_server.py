@@ -27,6 +27,12 @@ from app.firebase_client import get_firebase_status, init_firebase
 from app.llm import get_active_llm_status
 from app.logging_config import configure_logging
 
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _load_dotenv()
+except ImportError:
+    pass
+
 
 def _hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
@@ -390,6 +396,9 @@ def run() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
     init_firebase()
+    # Load FAQ AFTER Firebase is ready
+    faq_count = store.load_faq_from_firestore()
+    print(f"[Python Backend] Loaded {faq_count} FAQ entries from Firestore.", flush=True)
 
     host = os.getenv("PYTHON_BACKEND_HOST", "127.0.0.1")
     port = int(os.getenv("PYTHON_BACKEND_PORT") or os.getenv("PORT") or "8001")

@@ -50,11 +50,12 @@ SMALLTALK_PATTERNS = {
 SYMPTOM_KEYWORDS = [
     "pain", "cramp", "cramping", "spot", "spotting", "bleed", "bleeding", "blood",
     "bloat", "bloating", "nausea", "vomit", "vomiting", "morning sickness",
-    "fever", "temperature", "chills", "headache", "migraine", "cough", "sore throat",
+    "fever", "temperature", "chills", "headache", "head ache", "migraine", "cough", "sore throat",
     "diarrhea", "loose motion", "dizzy", "dizziness", "chest pain", "breathing",
     "shortness of breath", "breathless", "rash", "swelling", "palpitation", "fatigue",
     "back pain", "missed injection", "missed dose", "forgot injection", "fetal movement",
     "fainting", "seizure", "stroke", "urinary burning", "low blood sugar",
+    "stomach ache", "stomach pain", "stomach", "belly pain", "tummy ache", "abdominal pain", "ache",
 ]
 
 EMERGENCY_KEYWORDS = [
@@ -210,9 +211,20 @@ TELUGU_CLINICAL_QUESTIONS: Dict[str, str] = {
     "Morning sickness, nausea, and vomiting": "మొదటి త్రైమాసికంలో వికారం సాధారణం. మీరు 12 గంటలకు పైగా ఏ ద్రవపదార్థాలు కూడా తీసుకోలేకపోతున్నారా లేదా తీవ్రమైన మైకం ఉందా?",
     "Lower abdominal cramping (mild)": "గర్భాశయం విస్తరించడం వల్ల తేలికపాటి తిమ్మిర్లు రావచ్చు. నొప్పి తీవ్రంగా ఉందా, ఒకవైపు మాత్రమే వస్తోందా లేదా రక్తస్రావంతో పాటు ఉందా?",
     "Fever": "చాలా జ్వరాలు ఇన్ఫెక్షన్ల వల్ల వస్తాయి. మీ శరీర ఉష్ణోగ్రత ఎంత నమోదైంది మరియు జ్వరం వచ్చి ఎన్ని రోజులు అయ్యింది?",
-    "Headache": "తలనొప్పి అకస్మాత్తుగా తీవ్రంగా వచ్చిందా లేదా క్రమంగా వచ్చిందా? కంటి చూపు మసకబారడం వంటి లక్షణాలు ఉన్నాయా?",
-    "Abdominal Pain": "కడుపు నొప్పి ఎక్కడ వస్తోంది మరియు ఎంత తీవ్రంగా ఉంది?",
+    "Headache": "తలనొప్పి అకస్మాత్తుగా తీవ్రంగా వచ్చిందా లేదా క్రమంగా వచ్చిందా? తీవ్రమైన నొప్పి లేదా కంటి చూపు మసకబారడం ఉందా?",
+    "Abdominal Pain": "కడుపు నొప్పి ఎక్కడ వస్తోంది మరియు ఎంత తీవ్రంగా ఉంది (తీవ్రమైన నొప్పి లేదా కడుపు బిగుసుకుపోవడం ఉందా)?",
+    "Vomiting": "ఈరోజు మీరు ఎన్నిసార్లు వాంతులు చేసుకున్నారు, మరియు ద్రవపదార్థాలు తీసుకోగలుగుతున్నారా?",
+    "Diarrhea": "విరేచనాలలో రక్తం పడుతోందా లేదా తీవ్రమైన నీరసం/డీహైడ్రేషన్ లక్షణాలు ఉన్నాయా?",
     "Dizziness": "మీకు స్పృహ తప్పడం లేదా ఒకవైపు బలహీనత వంటి లక్షణాలు అనిపించాయా?",
+}
+
+TELUGU_SAFE_ANSWERS: Dict[str, str] = {
+    "Abdominal Pain": "కడుపు నొప్పికి అనేక కారణాలు ఉండవచ్చు. కొద్దిగా విశ్రాంతి తీసుకోండి, మంచినీళ్లు తాగండి. నొప్పి మరింత తీవ్రమైనా లేదా ఒకవైపు మాత్రమే ఎక్కువగా వస్తున్నా వెంటనే వైద్యుడిని సంప్రదించండి.",
+    "Headache": "ఒత్తిడి, అలసట లేదా డీహైడ్రేషన్ వల్ల తలనొప్పి రావచ్చు. ప్రశాంతమైన ప్రదేశంలో విశ్రాంతి తీసుకోండి, ఎక్కువ నీరు తాగండి. నొప్పి తీవ్రమైతే వైద్యుడిని సంప్రదించండి.",
+    "Fever": "చాలావరకు జ్వరాలు విశ్రాంతి మరియు ఎక్కువ ద్రవపదార్థాలు తాగడం వల్ల తగ్గుతాయి. ఉష్ణోగ్రత 102°F దాటితే లేదా 3 రోజులు దాటినా తగ్గకపోతే వెంటనే వైద్యుడిని సంప్రదించండి.",
+    "Vomiting": "వాంతులు తగ్గే వరకు కొద్దికొద్దిగా ఓఆర్ఎస్ లేదా కొబ్బరి నీరు తీసుకోండి. 24 గంటలకు పైగా నీరు కూడా తీసుకోలేకపోతే వైద్యుడిని సంప్రదించండి.",
+    "Diarrhea": "డీహైడ్రేషన్ రాకుండా ఓఆర్ఎస్ మరియు మజ్జిగ తీసుకోండి. నూనె, కారం తక్కువగా ఉన్న తేలికపాటి ఆహారం తినండి.",
+    "Dizziness": "డీహైడ్రేషన్ లేదా రక్తపోటు తగ్గడం వల్ల మైకం రావచ్చు. నెమ్మదిగా కూర్చోండి లేదా పడుకోండి, ఎక్కువ నీరు తాగండి.",
 }
 
 def build_doctor_escalation_message(target_lang: str) -> str:
@@ -580,22 +592,28 @@ def evaluate_triage_hard_stop(
         not safe_indicators.search(lower)
         and bool(re.search(r"\b(very bad|terrible|extreme|unbearable|emergency)\b", lower))
     ):
+        curr_route = triage_state.get("route", "post-care")
         return {
             "reply": build_triage_escalation_message(target_lang, unresponsive=False),
             "mode": "emergency",
             "intent": "triage_escalation",
-            "route": "post-care",
+            "route": curr_route,
         }
 
-    safe_reply = (
-        triage_state.get("provisional_answer")
-        or "Thank you for clarifying. Your symptoms appear to be within normal expected bounds. I have logged this update for your doctor."
-    )
+    curr_route = triage_state.get("route", "post-care")
+    scenario = triage_state.get("scenario", "")
+    if target_lang == "Telugu" and scenario in TELUGU_SAFE_ANSWERS:
+        safe_reply = TELUGU_SAFE_ANSWERS[scenario]
+    else:
+        safe_reply = (
+            triage_state.get("provisional_answer")
+            or "Thank you for clarifying. Your symptoms appear to be within normal expected bounds. Rest, stay hydrated, and consult a doctor if your symptoms worsen."
+        )
     return {
         "reply": safe_reply,
-        "mode": "post_care_triage_complete",
+        "mode": f"{curr_route.replace('-', '_')}_triage_complete",
         "intent": "triage_complete",
-        "route": "post-care",
+        "route": curr_route,
     }
 
 
@@ -670,8 +688,10 @@ async def process_sakhi_chat(
     session_id: Optional[str] = None,
     **kwargs: Any,
 ) -> Dict[str, Any]:
-    phone = store.normalize_phone(phone_number)
+    phone = store.normalize_phone(phone_number or session_id or user_id)
     user = store.get_user_by_id(user_id) if user_id else store.get_user_by_phone(phone)
+    if not user and phone:
+        user = store.get_user_by_phone(phone) or store.get_user_by_id(phone)
     patient = store.get_patient_by_phone(phone) if phone else None
     patient_name = patient.get("name") if patient else None
 
@@ -698,7 +718,8 @@ async def process_sakhi_chat(
     if not user.get("name") and patient and patient_name:
         store.update_user_profile(uid, {"name": patient_name})
 
-    if not user.get("name") or user_context.get("onboarding_step") == "name":
+    is_guest = str(uid).startswith("guest_") or user.get("role") == "guest"
+    if ((not user.get("name") or user_context.get("onboarding_step") == "name") and not is_guest):
         if is_onboarding_input_invalid(msg):
             store.update_user_context(uid, {"onboarding_step": "name", "initial_question": msg})
             return {
@@ -855,6 +876,62 @@ async def process_sakhi_chat(
             "language": target_lang,
         }
 
+    # Pre-Care & Guest general health inquiry triage (stomach ache, headache, fever, vomiting, etc.)
+    if not (is_patient and patient) and (mentioned_symptoms or is_direct_emergency(msg)):
+        rule = find_best_clinical_rule(msg, "General Medicine", "Initial Assessment")
+        if is_direct_emergency(msg) and (not rule or rule.get("emergency_flag")):
+            detail = rule.get("final_answer", "") if rule else ""
+            emergency_reply = build_emergency_caretaker_message(target_lang, detail)
+            store.record_escalation(uid, phone, "emergency", "emergency", emergency_reply)
+            store.save_message(uid, "assistant", emergency_reply, target_lang)
+            return {
+                "reply": emergency_reply,
+                "mode": "emergency",
+                "intent": "emergency",
+                "route": "pre-care",
+                "language": target_lang,
+            }
+
+        if rule and rule.get("emergency_flag"):
+            emergency_reply = build_emergency_caretaker_message(target_lang, rule.get("final_answer", ""))
+            store.record_escalation(uid, phone, "emergency", "emergency", emergency_reply)
+            store.save_message(uid, "assistant", emergency_reply, target_lang)
+            return {
+                "reply": emergency_reply,
+                "mode": "emergency",
+                "intent": "emergency",
+                "route": "pre-care",
+                "language": target_lang,
+            }
+
+        if rule:
+            store.update_chat_state(
+                uid,
+                {
+                    "waiting_for_triage_reply": True,
+                    "escalation_trigger": rule.get("escalation_trigger"),
+                    "provisional_answer": rule.get("final_answer"),
+                    "original_symptom": msg,
+                    "clarifying_question": rule.get("clarifying_question"),
+                    "triage_retry_count": 0,
+                    "scenario": rule.get("scenario"),
+                    "route": "pre-care",
+                },
+            )
+            triage_question = (
+                TELUGU_CLINICAL_QUESTIONS.get(rule.get("scenario", ""))
+                if target_lang == "Telugu" and rule.get("scenario") in TELUGU_CLINICAL_QUESTIONS
+                else (rule.get("clarifying_question") or rule.get("final_answer"))
+            )
+            store.save_message(uid, "assistant", triage_question, target_lang)
+            return {
+                "reply": triage_question,
+                "mode": "pre_care_triage",
+                "intent": "general_symptom_triage",
+                "route": "pre-care",
+                "language": target_lang,
+            }
+
     if is_patient and patient:
         first_name = str(user.get("name") or patient.get("name") or "").split()[0]
 
@@ -940,6 +1017,8 @@ async def process_sakhi_chat(
                     "original_symptom": msg,
                     "clarifying_question": rule.get("clarifying_question"),
                     "triage_retry_count": 0,
+                    "scenario": rule.get("scenario"),
+                    "route": "post-care",
                 },
             )
             triage_question = (
@@ -1049,7 +1128,9 @@ async def process_sakhi_chat(
         }
 
     supabase_matches: List[Dict[str, Any]] = []
-    local_matches = search_medical_knowledge(msg, None)[:3]
+    # Pre-care answers come ONLY from opdesk_sakhi_faq (Firestore).
+    # search_faq_knowledge returns [] when nothing matches → escalate below.
+    faq_matches = store.search_faq_knowledge(msg, top_k=3)
 
     context_sections: List[str] = []
     youtube_link: Optional[str] = None
@@ -1062,22 +1143,26 @@ async def process_sakhi_chat(
         if not infographic_url and sb.get("infographic_url"):
             infographic_url = sb["infographic_url"]
 
-    for doc, score in local_matches:
-        if score >= 0.30:
-            context_sections.append(f"{doc['title']}: {doc['content']}")
+    for doc in faq_matches:
+        context_sections.append(f"{doc['title']}: {doc['content']}")
+        # Pull media links directly from the FAQ Firestore entry
+        if not youtube_link and doc.get("youtube_link"):
+            youtube_link = doc["youtube_link"]
+        if not infographic_url and doc.get("infographic_url"):
+            infographic_url = doc["infographic_url"]
 
-    # Strict verified-data gate: if neither Supabase nor our JSON knowledge base contains data for this question,
-    # escalate to a verified doctor instead of generating an ungrounded reply.
+    # Strict verified-data gate: no matching FAQ in Firestore → escalate.
+    # We never fall back to the hardcoded medical_knowledge for pre-care.
     if not context_sections:
         esc_reply = build_doctor_escalation_message(target_lang)
-        store.record_escalation(uid, phone, "doctor_escalation", "missing_data_escalation", esc_reply)
+        store.record_escalation(uid, phone, "doctor_escalation", "missing_faq_data", esc_reply)
         store.save_message(uid, "assistant", esc_reply, target_lang)
         return {
             "reply": esc_reply,
             "mode": "doctor_escalation",
             "language": target_lang,
             "route": "doctor_escalation",
-            "intent": "missing_data_escalation",
+            "intent": "missing_faq_data",
         }
 
     context_block = (
@@ -1104,7 +1189,7 @@ async def process_sakhi_chat(
     )
 
     final_reply = ""
-    route_used = "local_kb"
+    route_used = "faq_rag"
 
     llm_res = await generate_sakhi_reply(
         system_instruction=system_prompt,
@@ -1113,19 +1198,15 @@ async def process_sakhi_chat(
     )
     if llm_res:
         final_reply = guardrails.clean_output(llm_res[0])
-        route_used = f"{llm_res[1]}_rag"
+        route_used = f"{llm_res[1]}_faq_rag"
     elif supabase_matches:
         top_sb = supabase_matches[0]
         final_reply = f"{top_sb['title']}\n\n{top_sb['content']}\n\nFor personalized medical advice, please consult your treating specialist."
         route_used = "supabase_direct"
-    else:
-        best_doc = local_matches[0][0]
-        doc_id = best_doc.get("id", "")
-        if target_lang == "Telugu" and doc_id in TELUGU_KNOWLEDGE_MAP:
-            final_reply = TELUGU_KNOWLEDGE_MAP[doc_id]
-        else:
-            final_reply = f"{best_doc['title']}\n\n{best_doc['content']}\n\nFor personalized medical advice or dosage decisions, please consult your treating specialist."
-        route_used = "local_kb"
+    elif faq_matches:
+        best_doc = faq_matches[0]
+        final_reply = f"{best_doc['title']}\n\n{best_doc['content']}\n\nFor personalized medical advice or dosage decisions, please consult your treating specialist."
+        route_used = "faq_direct"
 
     store.add_rewards(uid, 5)
     store.save_message(uid, "assistant", final_reply, target_lang)
@@ -1137,5 +1218,5 @@ async def process_sakhi_chat(
         "youtube_link": youtube_link,
         "infographic_url": infographic_url,
         "route": route_used,
-        "intent": local_matches[0][0]["sub_category"] if local_matches else "medical_inquiry",
+        "intent": faq_matches[0]["sub_category"] if faq_matches else "medical_inquiry",
     }
