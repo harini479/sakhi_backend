@@ -37,10 +37,13 @@ def _build_credential() -> Any:
     Return the best available Firebase credential.
 
     Priority:
-      1. FIREBASE_SERVICE_ACCOUNT_KEY  → path to service-account JSON (local dev)
-      2. GOOGLE_APPLICATION_CREDENTIALS → standard ADC env var (picked up automatically)
+      1. FIREBASE_SERVICE_ACCOUNT_KEY   → path to service-account JSON (local dev)
+      2. FIREBASE_SERVICE_ACCOUNT_JSON  → raw JSON string or base64 (cloud env vars)
       3. ApplicationDefault()           → Cloud Run IAM / gcloud ADC
     """
+    import json
+    import base64
+
     key_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY", "").strip()
     if key_path and os.path.isfile(key_path):
         logger.info(
@@ -49,7 +52,25 @@ def _build_credential() -> Any:
         )
         return firebase_credentials.Certificate(key_path)
 
-    # ApplicationDefault() automatically honours GOOGLE_APPLICATION_CREDENTIALS too
+    raw_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON", "").strip()
+    if raw_json:
+        try:
+            if raw_json.startswith("{"):
+                cred_dict = json.loads(raw_json)
+            else:
+                cred_dict = json.loads(base64.b64decode(raw_json).decode("utf-8"))
+            logger.info(
+                "Using Firebase service account JSON from environment variable.",
+                extra={"event": "firebase_cred_env_json"},
+            )
+            return firebase_credentials.Certificate(cred_dict)
+        except Exception as exc:
+            logger.warning(
+                "Could not parse FIREBASE_SERVICE_ACCOUNT_JSON: %s", exc,
+                extra={"event": "firebase_cred_parse_error"},
+            )
+
+    # ApplicationDefault() automatically honours Cloud Run IAM and GOOGLE_APPLICATION_CREDENTIALS
     logger.info(
         "Using Application Default Credentials (ADC).",
         extra={"event": "firebase_cred_adc"},
