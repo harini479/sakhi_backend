@@ -42,6 +42,10 @@ def init_firebase() -> bool:
         return False
 
     settings = get_settings()
+    if settings.demo_mode and not os.getenv("FORCE_FIREBASE"):
+        _init_error = "demo_mode_disabled"
+        logger.info("Firebase Admin disabled for public buildathon demo mode.")
+        return False
     options: Dict[str, Any] = {}
     if settings.firebase_project_id:
         options["projectId"] = settings.firebase_project_id

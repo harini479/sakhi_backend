@@ -110,10 +110,12 @@ def enforce_user_authorization(
 
 
 def verify_webhook_secret(provided_secret: Optional[str]) -> None:
-    """Verify shared webhook secret when WEBHOOK_SECRET / INTERNAL_API_SECRET is configured."""
+    """Verify shared webhook secret. In public demo mode, webhook requires configured secret."""
     settings = get_settings()
     expected = settings.webhook_secret
     if not expected:
+        if settings.demo_mode or settings.is_production:
+            raise AuthError(403, "Webhook endpoint is disabled in public demo mode")
         return
     if not provided_secret or not hmac.compare_digest(provided_secret.strip(), expected):
         logger.warning("Rejected webhook call with invalid secret.", extra={"event": "webhook_unauthorized"})

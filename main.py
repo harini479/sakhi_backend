@@ -2,6 +2,7 @@
 
 import logging
 import re
+import secrets
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -26,6 +27,21 @@ from app.logging_config import configure_logging
 load_dotenv()
 settings = get_settings()
 logger = configure_logging(settings.log_level)
+
+# In-memory sliding-window IP rate limiter
+_ip_rate_tracker: Dict[str, List[float]] = {}
+
+
+def check_ip_rate_limit(client_ip: str, max_per_minute: int = 30) -> bool:
+    now = time.monotonic()
+    timestamps = _ip_rate_tracker.setdefault(client_ip, [])
+    # Prune timestamps older than 60 seconds
+    valid = [t for t in timestamps if now - t < 60.0]
+    _ip_rate_tracker[client_ip] = valid
+    if len(valid) >= max_per_minute:
+        return False
+    valid.append(now)
+    return True
 
 
 @asynccontextmanager
@@ -60,7 +76,7 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_credentials=bool(settings.cors_origins and "*" not in settings.cors_origins),
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Request-Id"],
+    allow_headers=["Content-Type", "Authorization", "X-Request-Id", "X-Session-Id"],
 )
 
 
@@ -71,6 +87,24 @@ app.add_middleware(
 async def request_logging_middleware(request: Request, call_next):
     request_id = request.headers.get("X-Request-Id") or str(uuid.uuid4())
     request.state.request_id = request_id
+
+    # Enforce request body size limit
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > settings.max_request_body_bytes:
+                logger.warning(
+                    "Request rejected: payload size exceeds limit.",
+                    extra={"event": "payload_too_large", "bytes": content_length},
+                )
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Payload too large. Maximum allowed size is 32 KB.", "request_id": request_id},
+                    headers={"X-Request-Id": request_id},
+                )
+        except ValueError:
+            pass
+
     started = time.perf_counter()
     try:
         response = await call_next(request)
@@ -137,8 +171,9 @@ class InteractiveReply(BaseModel):
 
 
 class UnifiedChatRequest(BaseModel):
-    message: str = Field(default="", max_length=4000)
+    message: str = Field(default="", max_length=1000)
     sessionPhone: Optional[str] = Field(default=None, max_length=64)
+    sessionId: Optional[str] = Field(default=None, max_length=128)
     interactiveReply: Optional[InteractiveReply] = None
     language: Optional[str] = Field(default="en", max_length=32)
 
@@ -146,7 +181,7 @@ class UnifiedChatRequest(BaseModel):
 class DirectChatRequest(BaseModel):
     user_id: Optional[str] = Field(default=None, max_length=128)
     phone_number: Optional[str] = Field(default=None, max_length=64)
-    message: str = Field(default="", max_length=4000)
+    message: str = Field(default="", max_length=1000)
     language: Optional[str] = Field(default="en", max_length=32)
 
 
@@ -219,21 +254,55 @@ async def get_care_preview() -> Dict[str, Any]:
 # Unified Chat Endpoint (/api/chat) & Direct Endpoint (/sakhi/chat)
 # ---------------------------------------------------------------------------
 @app.post("/api/chat")
-async def unified_chat(payload: UnifiedChatRequest) -> Dict[str, Any]:
+async def unified_chat(
+    payload: UnifiedChatRequest,
+    request: Request,
+) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    if not check_ip_rate_limit(client_ip, settings.rate_limit_per_minute):
+        logger.warning(
+            "Rate limit exceeded on chat endpoint.",
+            extra={"event": "rate_limit_exceeded", "ip": client_ip},
+        )
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Rate limit exceeded. Please wait a moment before sending another message.", "request_id": request_id},
+            headers={"Retry-After": "60", "X-Request-Id": request_id},
+        )
+
+    # Validate or generate unpredictable guest session identifier (128-bit entropy)
+    session_id = payload.sessionId or request.headers.get("X-Session-Id")
+    if not session_id or not re.match(r"^guest_[a-zA-Z0-9_-]{12,64}$", session_id):
+        if payload.sessionPhone and payload.sessionPhone.startswith("guest_"):
+            session_id = payload.sessionPhone
+        else:
+            session_id = f"guest_{secrets.token_hex(16)}"
+
     phone_number = store.normalize_phone(payload.sessionPhone)
+    # If phone is not a recognized synthetic patient template, isolate as pure guest
+    if phone_number and not phone_number.startswith("guest_") and not store.get_patient_by_phone(phone_number):
+        phone_number = None
+
     responses: List[Dict[str, Any]] = []
 
     def push_response(item: Any) -> None:
         if isinstance(item, str):
-            responses.append({"type": "text", "text": {"body": item}})
+            responses.append({"type": "text", "text": {"body": item}, "sessionId": session_id})
         elif item:
+            if isinstance(item, dict):
+                item.setdefault("sessionId", session_id)
             responses.append(item)
 
     if payload.interactiveReply and payload.interactiveReply.id.startswith("hospital_"):
         place_id = payload.interactiveReply.id.replace("hospital_", "", 1)
         details = await hospitals.get_hospital_details(place_id)
         push_response(hospitals.build_hospital_detail_card(details))
-        return {"responses": responses}
+        return JSONResponse(
+            content={"responses": responses, "sessionId": session_id},
+            headers={"X-Session-Id": session_id, "X-Request-Id": request_id},
+        )
 
     incoming_text = (
         payload.interactiveReply.title
@@ -246,13 +315,17 @@ async def unified_chat(payload: UnifiedChatRequest) -> Dict[str, Any]:
         phone_number=phone_number,
         message=incoming_text,
         language=payload.language or "en",
+        session_id=session_id,
     )
 
     if data.get("error"):
         push_response(
             "Please select a patient profile or start a guest session before sending a message."
         )
-        return {"responses": responses}
+        return JSONResponse(
+            content={"responses": responses, "sessionId": session_id},
+            headers={"X-Session-Id": session_id, "X-Request-Id": request_id},
+        )
 
     is_hospital_search = (
         data.get("route") == "hospital_search" and data.get("intent") == "hospital search"
@@ -268,6 +341,7 @@ async def unified_chat(payload: UnifiedChatRequest) -> Dict[str, Any]:
                     "intent": data.get("intent"),
                     "route": data.get("route"),
                     "language": data.get("language"),
+                    "sessionId": session_id,
                 },
             }
         )
@@ -287,14 +361,29 @@ async def unified_chat(payload: UnifiedChatRequest) -> Dict[str, Any]:
             nearby = await hospitals.find_nearby_hospitals(zipcode, "General", 10000)
             push_response(hospitals.build_hospital_list_message(nearby, zipcode))
 
-    return {"responses": responses}
+    return JSONResponse(
+        content={"responses": responses, "sessionId": session_id},
+        headers={"X-Session-Id": session_id, "X-Request-Id": request_id},
+    )
 
 
 @app.post("/sakhi/chat")
 async def direct_sakhi_chat(
     payload: DirectChatRequest,
+    request: Request,
     authorization: Optional[str] = Header(default=None),
-) -> Dict[str, Any]:
+) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    if not check_ip_rate_limit(client_ip, settings.rate_limit_per_minute):
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Rate limit exceeded. Please wait a moment before sending another message.", "request_id": request_id},
+            headers={"Retry-After": "60", "X-Request-Id": request_id},
+        )
+
+    session_id = request.headers.get("X-Session-Id") or f"guest_{secrets.token_hex(16)}"
     if payload.user_id:
         enforce_user_authorization(payload.user_id, authorization)
 
@@ -303,15 +392,19 @@ async def direct_sakhi_chat(
         phone_number=payload.phone_number,
         message=payload.message,
         language=payload.language or "en",
+        session_id=session_id,
     )
     if result.get("statusCode") and result.get("error"):
         raise HTTPException(status_code=int(result["statusCode"]), detail=result["error"])
-    return result
+    return JSONResponse(
+        content=result,
+        headers={"X-Session-Id": session_id, "X-Request-Id": request_id},
+    )
 
 
 @app.post("/api/workflow_step")
 async def workflow_step() -> Dict[str, bool]:
-    return {"handled": False}
+    raise HTTPException(status_code=404, detail="Endpoint not available in demo mode")
 
 
 # ---------------------------------------------------------------------------
@@ -372,6 +465,9 @@ async def register_user(
     payload: RegisterRequest,
     authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
+    if settings.demo_mode:
+        raise HTTPException(status_code=403, detail="User registration is disabled in public demo mode.")
+
     if not payload.email and not payload.phone_number:
         raise HTTPException(status_code=400, detail="email or phone_number is required")
 
@@ -407,6 +503,9 @@ async def register_user(
 
 @app.post("/user/login")
 async def login_user(payload: LoginRequest) -> Dict[str, Any]:
+    if settings.demo_mode:
+        raise HTTPException(status_code=403, detail="User login is disabled in public demo mode.")
+
     user = store.users_by_email.get(payload.email.strip().lower())
     if not user or not user.get("password_hash"):
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -426,6 +525,8 @@ async def save_user_answers(
     payload: UserAnswersRequest,
     authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
+    if settings.demo_mode:
+        raise HTTPException(status_code=403, detail="Patient record persistence is disabled in public demo mode.")
     enforce_user_authorization(payload.user_id, authorization)
     saved = store.save_user_answers(payload.user_id, payload.answers)
     return {"status": "success", "saved": saved}
@@ -436,6 +537,8 @@ async def update_user_relation(
     payload: UserRelationRequest,
     authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, str]:
+    if settings.demo_mode:
+        raise HTTPException(status_code=403, detail="Patient record updates are disabled in public demo mode.")
     enforce_user_authorization(payload.user_id, authorization)
     store.update_user_profile(payload.user_id, {"relation": payload.relation})
     return {"status": "success"}
@@ -446,6 +549,8 @@ async def update_user_language(
     payload: UserLanguageRequest,
     authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, str]:
+    if settings.demo_mode:
+        raise HTTPException(status_code=403, detail="Patient record updates are disabled in public demo mode.")
     enforce_user_authorization(payload.user_id, authorization)
     store.update_user_profile(payload.user_id, {"preferred_language": payload.preferred_language})
     return {"status": "success"}
@@ -493,6 +598,8 @@ async def expert_redirect(
     body: Dict[str, Any],
     authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, str]:
+    if settings.demo_mode:
+        raise HTTPException(status_code=403, detail="Expert dashboard redirection is disabled in public demo mode.")
     target_uid = str(body.get("user_id") or "").strip() or None
     enforce_user_authorization(target_uid, authorization)
     return {

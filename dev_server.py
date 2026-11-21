@@ -129,19 +129,31 @@ async def _handle_post(
             interactive_reply = body.get("interactiveReply") or {}
             message = str(body.get("message") or "")
             language = str(body.get("language") or "en")
+            session_id = str(body.get("sessionId") or "")
+            if not session_id or not re.match(r"^guest_[a-zA-Z0-9_-]{12,64}$", session_id):
+                if phone_number and phone_number.startswith("guest_"):
+                    session_id = phone_number
+                else:
+                    session_id = f"guest_{secrets.token_hex(16)}"
+
+            if phone_number and not phone_number.startswith("guest_") and not store.get_patient_by_phone(phone_number):
+                phone_number = None
+
             responses: List[Dict[str, Any]] = []
 
             def push_response(item: Any) -> None:
                 if isinstance(item, str):
-                    responses.append({"type": "text", "text": {"body": item}})
+                    responses.append({"type": "text", "text": {"body": item}, "sessionId": session_id})
                 elif item:
+                    if isinstance(item, dict):
+                        item.setdefault("sessionId", session_id)
                     responses.append(item)
 
             if isinstance(interactive_reply, dict) and str(interactive_reply.get("id") or "").startswith("hospital_"):
                 place_id = str(interactive_reply["id"]).replace("hospital_", "", 1)
                 details = await hospitals.get_hospital_details(place_id)
                 push_response(hospitals.build_hospital_detail_card(details))
-                return 200, {"responses": responses}
+                return 200, {"responses": responses, "sessionId": session_id}
 
             incoming_text = (
                 str(interactive_reply.get("title"))
@@ -154,13 +166,14 @@ async def _handle_post(
                 phone_number=phone_number,
                 message=incoming_text,
                 language=language,
+                session_id=session_id,
             )
 
             if data.get("error"):
                 push_response(
                     "Please select a patient profile or start a guest session before sending a message."
                 )
-                return 200, {"responses": responses}
+                return 200, {"responses": responses, "sessionId": session_id}
 
             is_hospital_search = (
                 data.get("route") == "hospital_search" and data.get("intent") == "hospital search"
@@ -176,6 +189,7 @@ async def _handle_post(
                             "intent": data.get("intent"),
                             "route": data.get("route"),
                             "language": data.get("language"),
+                            "sessionId": session_id,
                         },
                     }
                 )
@@ -195,7 +209,7 @@ async def _handle_post(
                     nearby = await hospitals.find_nearby_hospitals(zipcode, "General", 10000)
                     push_response(hospitals.build_hospital_list_message(nearby, zipcode))
 
-            return 200, {"responses": responses}
+            return 200, {"responses": responses, "sessionId": session_id}
 
         if path == "/sakhi/chat":
             if body.get("user_id"):
@@ -211,7 +225,12 @@ async def _handle_post(
             return 200, result
 
         if path == "/api/workflow_step":
-            return 200, {"handled": False}
+            return 404, {"detail": "Endpoint not available in demo mode"}
+
+        if path.startswith("/user/"):
+            settings = get_settings()
+            if settings.demo_mode:
+                return 403, {"detail": "User and patient account operations are disabled in public demo mode"}
 
         if path == "/user/register":
             name = str(body.get("name") or "").strip()
@@ -306,6 +325,9 @@ async def _handle_post(
             return 200, {"status": "success", "response": response}
 
         if path == "/expert/redirect":
+            settings = get_settings()
+            if settings.demo_mode:
+                return 403, {"detail": "Expert dashboard redirection is disabled in public demo mode"}
             target_uid = str(body.get("user_id") or "").strip() or None
             enforce_user_authorization(target_uid, authorization)
             return 200, {

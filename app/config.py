@@ -5,6 +5,9 @@ from dataclasses import dataclass, field
 from typing import List
 
 
+DEMO_FRONTEND_ORIGIN = "https://frontend-service-727289315493.asia-south1.run.app"
+
+
 def _parse_bool(raw: str, default: bool = False) -> bool:
     val = (raw or "").strip().lower()
     if not val:
@@ -41,6 +44,9 @@ class Settings:
     openai_model: str = "gpt-4o-mini"
     hospital_search_radius_meters: int = 10000
     webhook_secret: str = ""
+    demo_mode: bool = True
+    rate_limit_per_minute: int = 30
+    max_request_body_bytes: int = 32768
 
     @property
     def is_production(self) -> bool:
@@ -53,8 +59,13 @@ def load_settings() -> Settings:
 
     # Support CORS_ORIGINS (primary) with backward-compatible ALLOWED_ORIGINS fallback
     raw_cors = os.getenv("CORS_ORIGINS", "").strip() or os.getenv("ALLOWED_ORIGINS", "").strip()
-    if not raw_cors and not is_prod:
-        raw_cors = "http://localhost:5173,http://localhost:3000"
+    if not raw_cors:
+        if is_prod:
+            raw_cors = DEMO_FRONTEND_ORIGIN
+        else:
+            raw_cors = f"{DEMO_FRONTEND_ORIGIN},http://localhost:5173,http://localhost:3000"
+
+    demo_mode = _parse_bool(os.getenv("DEMO_MODE", "true"), default=True)
 
     try:
         port = int(os.getenv("PORT", "8080"))
@@ -99,6 +110,7 @@ def load_settings() -> Settings:
             os.getenv("WEBHOOK_SECRET", "").strip()
             or os.getenv("INTERNAL_API_SECRET", "").strip()
         ),
+        demo_mode=demo_mode,
     )
 
 

@@ -566,29 +566,34 @@ async def process_sakhi_chat(
     phone_number: Optional[str] = None,
     message: str = "",
     language: str = "en",
+    session_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     phone = store.normalize_phone(phone_number)
-    user = store.get_user_by_id(user_id) if user_id else store.get_user_by_phone(phone)
     patient = store.get_patient_by_phone(phone) if phone else None
     patient_name = patient.get("name") if patient else None
 
-    if not user:
-        if not phone:
-            return {"statusCode": 400, "error": "user_id or phone_number is required"}
-        user = store.create_partial_user(phone)
-        if patient and patient_name:
-            store.update_user_profile(user["user_id"], {"name": patient_name})
-        else:
-            store.update_user_context(user["user_id"], {"onboarding_step": "name"})
-            return {
-                "reply": NAME_ONBOARDING_PROMPT,
-                "mode": "onboarding",
-                "intent": "ask_name",
-                "language": "en",
-                "route": "onboarding",
-            }
-
-    uid = user.get("user_id") or user.get("id")
+    # In public demo mode with guest session isolation, state is bound to session_id
+    if session_id and session_id.startswith("guest_"):
+        uid = f"{session_id}:{phone}" if phone else session_id
+        user = store.get_or_create_guest_session(uid, default_name=patient_name)
+    else:
+        user = store.get_user_by_id(user_id) if user_id else store.get_user_by_phone(phone)
+        if not user:
+            if not phone:
+                return {"statusCode": 400, "error": "user_id or phone_number is required"}
+            user = store.create_partial_user(phone)
+            if patient and patient_name:
+                store.update_user_profile(user["user_id"], {"name": patient_name})
+            else:
+                store.update_user_context(user["user_id"], {"onboarding_step": "name"})
+                return {
+                    "reply": NAME_ONBOARDING_PROMPT,
+                    "mode": "onboarding",
+                    "intent": "ask_name",
+                    "language": "en",
+                    "route": "onboarding",
+                }
+        uid = user.get("user_id") or user.get("id")
     msg = str(message or "").strip()
     user_context = store.get_user_context(uid)
 

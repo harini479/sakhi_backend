@@ -655,9 +655,48 @@ def get_predefined_care_preview() -> Dict[str, Any]:
     return {"pre_care": {"topics": []}, "post_care": {"patients": []}}
 
 
+_guest_sessions: Dict[str, Dict[str, Any]] = {}
+MAX_GUEST_SESSIONS = 5000
+
+
+def get_or_create_guest_session(session_id: str, default_name: Optional[str] = None) -> Dict[str, Any]:
+    global _guest_sessions
+    if len(_guest_sessions) > MAX_GUEST_SESSIONS:
+        oldest_keys = list(_guest_sessions.keys())[:1000]
+        for k in oldest_keys:
+            _guest_sessions.pop(k, None)
+            conversations.pop(k, None)
+            user_contexts.pop(k, None)
+            chat_states.pop(k, None)
+
+    session = _guest_sessions.get(session_id)
+    if not session:
+        session = {
+            "session_id": session_id,
+            "user_id": session_id,
+            "id": session_id,
+            "name": default_name,
+            "phone_number": session_id,
+            "email": None,
+            "role": "guest",
+            "preferred_language": "en",
+            "relation": "self",
+            "created_at": _utc_now_iso(),
+            "last_active": _utc_now_iso(),
+        }
+        _guest_sessions[session_id] = session
+    else:
+        session["last_active"] = _utc_now_iso()
+        if default_name and not session.get("name"):
+            session["name"] = default_name
+    return session
+
+
 def get_user_by_phone(phone: Optional[str]) -> Optional[Dict[str, Any]]:
     if not phone:
         return None
+    if phone.startswith("guest_"):
+        return _guest_sessions.get(phone) or get_or_create_guest_session(phone)
     norm = normalize_phone(phone)
     return users_by_phone.get(norm) or users_by_phone.get(phone)
 
@@ -665,6 +704,8 @@ def get_user_by_phone(phone: Optional[str]) -> Optional[Dict[str, Any]]:
 def get_user_by_id(user_id: Optional[str]) -> Optional[Dict[str, Any]]:
     if not user_id:
         return None
+    if user_id.startswith("guest_"):
+        return _guest_sessions.get(user_id) or get_or_create_guest_session(user_id)
     cached = users_by_id.get(user_id)
     if cached:
         return cached
@@ -755,6 +796,8 @@ def update_chat_state(user_id: str, patch: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_patient_by_phone(phone: Optional[str]) -> Optional[Dict[str, Any]]:
     if not phone:
+        return None
+    if str(phone).startswith("guest_"):
         return None
     norm = normalize_phone(phone)
     return clinic_patients.get(norm) or clinic_patients.get(phone)

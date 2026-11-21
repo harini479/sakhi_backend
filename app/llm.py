@@ -2,6 +2,7 @@
 
 import logging
 import os
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from .config import get_settings
@@ -10,6 +11,8 @@ from .http_client import request_json
 logger = logging.getLogger("sakhi.llm")
 
 _last_provider_diagnostic: Optional[str] = None
+_llm_call_timestamps: List[float] = []
+MAX_LLM_CALLS_PER_MINUTE = 60
 
 
 async def _call_openai(
@@ -82,7 +85,7 @@ async def _call_gemini(
 
     settings = get_settings()
     history_lines: List[str] = []
-    for turn in (history or [])[-6:]:
+    for turn in (history or [])[-4:]:
         content = str(turn.get("content", "")).strip()
         if content:
             speaker = "User" if turn.get("role") == "user" else "Sakhi"
@@ -112,6 +115,7 @@ async def _call_gemini(
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
             "generationConfig": {
                 "thinkingConfig": {"thinkingLevel": thinking_level},
+                "maxOutputTokens": 600,
             },
         }
         try:
@@ -158,7 +162,19 @@ async def generate_sakhi_reply(
     user_message: str,
     history: Optional[List[Dict[str, Any]]] = None,
 ) -> Optional[Tuple[str, str]]:
-    """Generate a medically grounded reply using configured provider credentials."""
+    """Generate a medically grounded reply with usage safeguards and call budgets."""
+    global _llm_call_timestamps
+    now = time.monotonic()
+    _llm_call_timestamps = [t for t in _llm_call_timestamps if now - t < 60.0]
+    if len(_llm_call_timestamps) >= MAX_LLM_CALLS_PER_MINUTE:
+        logger.warning(
+            "Global LLM rate limit budget exceeded; falling back to clinical knowledge.",
+            extra={"event": "llm_budget_exceeded"},
+        )
+        return None
+
+    _llm_call_timestamps.append(now)
+
     if os.getenv("OPENAI_API_KEY", "").strip():
         openai_text = await _call_openai(system_instruction, user_message, history)
         if openai_text:
