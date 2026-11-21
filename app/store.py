@@ -49,6 +49,7 @@ def _utc_now_iso() -> str:
 
 
 def _firestore_write(collection: str, doc_id: str, payload: Dict[str, Any], merge: bool = True) -> None:
+    return  # In-memory only for demo mode, skip all network Firestore calls
     """Persist critical records to Cloud Firestore when initialized on Cloud Run."""
     db = get_firestore_client()
     if db is None:
@@ -722,6 +723,14 @@ def get_user_by_id(user_id: Optional[str]) -> Optional[Dict[str, Any]]:
 
 def save_user_profile(user_row: Dict[str, Any]) -> Dict[str, Any]:
     uid = user_row["user_id"]
+    # Guest sessions live in _guest_sessions only — never write to Firestore or users_by_id
+    if uid.startswith("guest_"):
+        existing = _guest_sessions.get(uid)
+        if existing is not None:
+            existing.update(user_row)
+        else:
+            _guest_sessions[uid] = user_row
+        return _guest_sessions[uid]
     users_by_id[uid] = user_row
     if user_row.get("phone_number"):
         users_by_phone[user_row["phone_number"]] = user_row

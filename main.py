@@ -272,18 +272,13 @@ async def unified_chat(
             headers={"Retry-After": "60", "X-Request-Id": request_id},
         )
 
-    # Validate or generate unpredictable guest session identifier (128-bit entropy)
-    session_id = payload.sessionId or request.headers.get("X-Session-Id")
-    if not session_id or not re.match(r"^guest_[a-zA-Z0-9_-]{12,64}$", session_id):
-        if payload.sessionPhone and payload.sessionPhone.startswith("guest_"):
-            session_id = payload.sessionPhone
-        else:
-            session_id = f"guest_{secrets.token_hex(16)}"
-
+    # Resolve phone number or guest session identifier
     phone_number = store.normalize_phone(payload.sessionPhone)
-    # If phone is not a recognized synthetic patient template, isolate as pure guest
-    if phone_number and not phone_number.startswith("guest_") and not store.get_patient_by_phone(phone_number):
-        phone_number = None
+    if not phone_number:
+        session_id = payload.sessionId or request.headers.get("X-Session-Id") or f"guest_{secrets.token_hex(8)}"
+        phone_number = session_id
+    else:
+        session_id = phone_number
 
     responses: List[Dict[str, Any]] = []
 
@@ -315,7 +310,6 @@ async def unified_chat(
         phone_number=phone_number,
         message=incoming_text,
         language=payload.language or "en",
-        session_id=session_id,
     )
 
     if data.get("error"):
@@ -392,7 +386,6 @@ async def direct_sakhi_chat(
         phone_number=payload.phone_number,
         message=payload.message,
         language=payload.language or "en",
-        session_id=session_id,
     )
     if result.get("statusCode") and result.get("error"):
         raise HTTPException(status_code=int(result["statusCode"]), detail=result["error"])
